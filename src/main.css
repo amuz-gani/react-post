@@ -1,0 +1,23 @@
+.detail-box{
+    padding: 0% 10%;
+}
+
+.detail-box>button{
+    margin: 1% 0;
+}
+
+.list-Item{
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 1% 0;
+    padding: 0.5%;
+
+}
+
+.nav{
+    padding:5% 10%;
+}
+
+h1{
+margin: 0;
+}
