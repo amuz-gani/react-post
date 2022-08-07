@@ -4,14 +4,26 @@ import UserListView from "./screen/UserListView";
 import { Routes, Route, Link } from "react-router-dom";
 import PostListView from "./screen/PostListView";
 import DetailView from "./screen/DetailView";
+import { computeHeadingLevel } from "@testing-library/react";
+import { comment } from "postcss";
 
 const App = () => {
+  const [users2, setUsers2] = useState([]);
   const [users, setUsers] = useState([]);
+  const [comment, setComment] = useState([]);
 
   useEffect(() => {
+    axios.get("https://jsonplaceholder.typicode.com/users").then((res) => {
+      setUsers2(...[res.data]);
+    });
     axios.get("https://jsonplaceholder.typicode.com/todos").then((response) => {
       setUsers(...[response.data]);
     });
+    axios
+      .get("https://jsonplaceholder.typicode.com/comments?postId=1")
+      .then((a) => {
+        setComment(...[a.data]);
+      });
   }, []);
 
   let filterId = users.filter(function (item1, idx1) {
@@ -31,7 +43,9 @@ const App = () => {
       <Routes>
         <Route
           path="/"
-          element={<UserListView users={users} filterId={filterId} />}
+          element={
+            <UserListView users2={users2} users={users} filterId={filterId} />
+          }
         />
         <Route
           path="/:id"
@@ -39,7 +53,9 @@ const App = () => {
         />
         <Route
           path="/:id/detail/:postid"
-          element={<DetailView users={users} filterId={filterId} />}
+          element={
+            <DetailView users={users} filterId={filterId} comment={comment} />
+          }
         />
       </Routes>
     </>
