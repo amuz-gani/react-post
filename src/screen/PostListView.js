@@ -2,15 +2,21 @@ import { tab } from "@testing-library/user-event/dist/tab";
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ListItem from "../component/ListItem";
+import { useRecoilState } from "recoil";
+import { userListAtom } from "../atom";
+import { postListAtom } from "../atom";
 
-const PostListView = ({ users, filterId }) => {
+const PostListView = ({ filterId }) => {
   let navigate = useNavigate();
+
+  const [userList, setUserList] = useRecoilState(userListAtom);
+  const [postListdata, setPostList] = useRecoilState(postListAtom);
 
   let [tabState, setTabState] = useState(0);
 
   let { id } = useParams();
   const userIdName = filterId[id - 1].userId;
-  const postList = users.filter((users) => users.userId === userIdName);
+  const postList = postListdata.filter((users) => users.userId === userIdName);
 
   const completedTure = postList.filter((users) => users.completed !== false);
   const completedFalse = postList.filter((users) => users.completed !== true);
@@ -25,7 +31,6 @@ const PostListView = ({ users, filterId }) => {
     return classes.filter(Boolean).join(" ");
   }
 
-  console.log(tab);
   return (
     <div className="detail-box">
       <div className="pb-5 border-b border-gray-200 sm:pb-0">
@@ -82,7 +87,7 @@ const PostListView = ({ users, filterId }) => {
                   navigate(`/${userIdName}/detail/${user.id}`);
                 }}
               >
-                <ListItem userId={user.userId} title={user.title} img={""} />
+                <ListItem userId={user.userId} title={user.title} img={true} />
               </div>
             );
           })}
@@ -97,7 +102,7 @@ const PostListView = ({ users, filterId }) => {
                   navigate(`/${userIdName}/detail/${user.id}`);
                 }}
               >
-                <ListItem userId={user.userId} title={user.title} img={""} />
+                <ListItem userId={user.userId} title={user.title} img={true} />
               </div>
             );
           })}
@@ -112,7 +117,7 @@ const PostListView = ({ users, filterId }) => {
                   navigate(`/${userIdName}/detail/${user.id}`);
                 }}
               >
-                <ListItem userId={user.userId} title={user.title} />
+                <ListItem userId={user.userId} title={user.title} img={true} />
               </div>
             );
           })}

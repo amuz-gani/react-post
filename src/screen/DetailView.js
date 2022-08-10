@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../main.css";
 import ListItem from "../component/ListItem";
@@ -12,20 +12,32 @@ import {
   XIcon,
 } from "@heroicons/react/solid";
 import { Listbox, Transition } from "@headlessui/react";
+import { useRecoilState } from "recoil";
+import { commentListAtom } from "../atom";
+import { userListAtom } from "../atom";
+import { postListAtom } from "../atom";
 
-const DetailView = ({ users, filterId, comment }) => {
+const DetailView = ({ filterId }) => {
+  const [userList, setUserList] = useRecoilState(userListAtom);
+  const [postList, setPostList] = useRecoilState(postListAtom);
+  const [comment, setComment] = useRecoilState(commentListAtom);
+
   let { id, postid } = useParams();
   let navigate = useNavigate();
-  const IdName = users[postid - 1].id;
-  const postDetail = users.filter((users) => users.id === IdName);
+  const [commentPlus, setCommentPlus] = useState();
+  const IdName = postList[postid - 1].id;
+  const postDetail = postList.filter((postList) => postList.id === IdName);
   const userIdName = filterId[id - 1].userId;
-  const postList = users.filter((users) => users.userId === userIdName);
-  const min = postList[0].id;
-  const max = postList[postList.length - 1].id;
+  const pageList = postList.filter(
+    (postList) => postList.userId === userIdName
+  );
+
+  const min = pageList[0].id;
+  const max = pageList[pageList.length - 1].id;
 
   const nowDetail = postDetail[0].id;
-  const pre = postList.filter((postList) => postList.id + 1 === nowDetail);
-  const next = postList.filter((postList) => postList.id - 1 === nowDetail);
+  const pre = pageList.filter((pageList) => pageList.id + 1 === nowDetail);
+  const next = pageList.filter((pageList) => pageList.id - 1 === nowDetail);
 
   const buttonClick = () => {
     if (min < postDetail[0].id && max >= postDetail[0].id) {
@@ -39,96 +51,54 @@ const DetailView = ({ users, filterId, comment }) => {
     }
   };
 
-  let filterComment = comment.filter((comment) => comment.postId === nowDetail);
+  const filterComment = comment.filter(
+    (comment) => comment.postId === nowDetail
+  );
 
-  console.log("filterComment", filterComment);
+  const plusComment = [];
 
-  const moods = [
-    {
-      name: "Excited",
-      value: "excited",
-      icon: FireIcon,
-      iconColor: "text-white",
-      bgColor: "bg-red-500",
-    },
-    {
-      name: "Loved",
-      value: "loved",
-      icon: HeartIcon,
-      iconColor: "text-white",
-      bgColor: "bg-pink-400",
-    },
-    {
-      name: "Happy",
-      value: "happy",
-      icon: EmojiHappyIcon,
-      iconColor: "text-white",
-      bgColor: "bg-green-400",
-    },
-    {
-      name: "Sad",
-      value: "sad",
-      icon: EmojiSadIcon,
-      iconColor: "text-white",
-      bgColor: "bg-yellow-400",
-    },
-    {
-      name: "Thumbsy",
-      value: "thumbsy",
-      icon: ThumbUpIcon,
-      iconColor: "text-white",
-      bgColor: "bg-blue-500",
-    },
-    {
-      name: "I feel nothing",
-      value: null,
-      icon: XIcon,
-      iconColor: "text-gray-400",
-      bgColor: "bg-transparent",
-    },
-  ];
+  const addComment = () => {
+    let value = document.querySelector("#new-content").value;
+    const plusComment = [
+      {
+        body: value,
+        email: "유저 이메일",
+        id: filterComment.length + 1,
+        name: "gani",
+        postId: nowDetail,
+      },
+    ];
+    setComment(comment.concat(plusComment));
+  };
 
-  function classNames(...classes) {
-    return classes.filter(Boolean).join(" ");
-  }
+  const commentResult = filterComment.concat(plusComment);
 
-  const [selected, setSelected] = useState(moods[5]);
-  return (
-    <>
-      <div className="detail-box">
-        <div className="pb-5 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            현재글: {postDetail[0].title}
-          </h3>
-          <p className="mt-2 max-w-4xl text-sm text-gray-500">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-        </div>
+  const getReplyList = () => {
+    return (
+      <>
         <div className="pb-8">
-          {filterComment.length === 0 ? (
+          {commentResult.length === 0 ? (
             <p className="mt-2 max-w-4xl text-sm">댓글이 없습니다</p>
           ) : (
             <p className="mt-2 max-w-4xl text-sm">
-              댓글 {filterComment.length}개
+              댓글 {commentResult.length}개
             </p>
           )}
           <div className="flow-root mt-3">
             <ul role="list" className="-my-5 divide-y divide-gray-200">
-              {filterComment.map((comment) => (
-                <li key={comment.handle} className="py-4">
+              {commentResult.map((comment, index) => (
+                <li key={index} className="py-4">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
-                      <img
-                        className="h-8 w-8 rounded-full"
-                        src={comment.imageUrl}
-                        alt=""
-                      />
+                      <span className="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100">
+                        <svg
+                          className="h-full w-full text-gray-300"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -152,14 +122,40 @@ const DetailView = ({ users, filterId, comment }) => {
             </ul>
           </div>
         </div>
-        //댓글달기
+      </>
+    );
+  };
+
+  return (
+    <>
+      <div className="detail-box">
+        <div className="pb-5 border-b border-gray-200">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            현재글: {postDetail[0].title}
+          </h3>
+          <p className="mt-2 max-w-4xl text-sm text-gray-500">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat. Duis aute irure dolor in
+            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+            culpa qui officia deserunt mollit anim id est laborum.
+          </p>
+        </div>
+
+        <div>{getReplyList()}</div>
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
-            <img
-              className="inline-block h-10 w-10 rounded-full"
-              src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              alt=""
-            />
+            <span className="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100">
+              <svg
+                className="h-full w-full text-gray-300"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </span>
           </div>
           <div className="min-w-0 flex-1">
             <form action="#" className="relative">
@@ -169,16 +165,13 @@ const DetailView = ({ users, filterId, comment }) => {
                 </label>
                 <textarea
                   rows={3}
-                  name="comment"
-                  id="comment"
+                  id="new-content"
                   className="block w-full py-3 border-0 resize-none focus:ring-0 sm:text-sm"
                   placeholder="Add your comment..."
                   defaultValue={""}
                 />
 
-                {/* Spacer element to match the height of the toolbar */}
                 <div className="py-2" aria-hidden="true">
-                  {/* Matches height of button in toolbar (1px border + 36px content height) */}
                   <div className="py-px">
                     <div className="h-9" />
                   </div>
@@ -197,7 +190,7 @@ const DetailView = ({ users, filterId, comment }) => {
                     </button>
                   </div>
                   <div className="flex items-center">
-                    <Listbox value={selected} onChange={setSelected}>
+                    <Listbox>
                       {({ open }) => (
                         <>
                           <Listbox.Label className="sr-only">
@@ -206,79 +199,15 @@ const DetailView = ({ users, filterId, comment }) => {
                           <div className="relative">
                             <Listbox.Button className="relative -m-2.5 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-500">
                               <span className="flex items-center justify-center">
-                                {selected.value === null ? (
-                                  <span>
-                                    <EmojiHappyIcon
-                                      className="flex-shrink-0 h-5 w-5"
-                                      aria-hidden="true"
-                                    />
-                                    <span className="sr-only">
-                                      Add your mood
-                                    </span>
-                                  </span>
-                                ) : (
-                                  <span>
-                                    <span
-                                      className={classNames(
-                                        selected.bgColor,
-                                        "w-8 h-8 rounded-full flex items-center justify-center"
-                                      )}
-                                    >
-                                      <selected.icon
-                                        className="flex-shrink-0 h-5 w-5 text-white"
-                                        aria-hidden="true"
-                                      />
-                                    </span>
-                                    <span className="sr-only">
-                                      {selected.name}
-                                    </span>
-                                  </span>
-                                )}
+                                <span>
+                                  <EmojiHappyIcon
+                                    className="flex-shrink-0 h-5 w-5"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="sr-only">Add your mood</span>
+                                </span>
                               </span>
                             </Listbox.Button>
-
-                            {/* <Transition
-                              show={open}
-                              as={Fragment}
-                              leave="transition ease-in duration-100"
-                              leaveFrom="opacity-100"
-                              leaveTo="opacity-0"
-                            > */}
-                            {/* <Listbox.Options className="absolute z-10 mt-1 -ml-6 w-60 bg-white shadow rounded-lg py-3 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:ml-auto sm:w-64 sm:text-sm">
-                                {moods.map((mood) => (
-                                  <Listbox.Option
-                                    key={mood.value}
-                                    className={({ active }) =>
-                                      classNames(
-                                        active ? "bg-gray-100" : "bg-white",
-                                        "cursor-default select-none relative py-2 px-3"
-                                      )
-                                    }
-                                    value={mood}
-                                  >
-                                    <div className="flex items-center">
-                                      <div
-                                        className={classNames(
-                                          mood.bgColor,
-                                          "w-8 h-8 rounded-full flex items-center justify-center"
-                                        )}
-                                      >
-                                        <mood.icon
-                                          className={classNames(
-                                            mood.iconColor,
-                                            "flex-shrink-0 h-5 w-5"
-                                          )}
-                                          aria-hidden="true"
-                                        />
-                                      </div>
-                                      <span className="ml-3 block font-medium truncate">
-                                        {mood.name}
-                                      </span>
-                                    </div>
-                                  </Listbox.Option>
-                                ))}
-                              </Listbox.Options> */}
-                            {/* </Transition> */}
                           </div>
                         </>
                       )}
@@ -287,8 +216,11 @@ const DetailView = ({ users, filterId, comment }) => {
                 </div>
                 <div className="flex-shrink-0">
                   <button
-                    type="submit"
+                    type="button"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={() => {
+                      addComment();
+                    }}
                   >
                     Post
                   </button>
@@ -298,7 +230,7 @@ const DetailView = ({ users, filterId, comment }) => {
           </div>
         </div>
         <p className="mt-6"></p>
-        {postDetail[0].id === postList[0].id ? (
+        {postDetail[0].id === pageList[0].id ? (
           <>
             <div
               onClick={() => {
@@ -315,7 +247,7 @@ const DetailView = ({ users, filterId, comment }) => {
               <ListItem title={next[0].title} pn="다음글" />
             </div>
           </>
-        ) : postDetail[0].id === postList[postList.length - 1].id ? (
+        ) : postDetail[0].id === pageList[pageList.length - 1].id ? (
           <>
             <div
               onClick={() => {

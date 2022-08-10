@@ -2,15 +2,17 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import ListItem from "../component/ListItem";
 import "../main.css";
+import { useRecoilState } from "recoil";
+import { userListAtom } from "../atom";
 
-const UserListView = ({ filterId, users2 }) => {
+const UserListView = () => {
   let navigate = useNavigate();
+  const [userList, setUserList] = useRecoilState(userListAtom);
 
-  console.log("users2", users2);
   return (
     <div className="detail-box">
-      <h1>UserList : {filterId.length}명</h1>
-      {users2.map((user) => {
+      <h1>UserList : {userList.length}명</h1>
+      {userList.map((user) => {
         return (
           <div
             key={user.id}
@@ -18,7 +20,12 @@ const UserListView = ({ filterId, users2 }) => {
               navigate(`/${user.id}`);
             }}
           >
-            <ListItem userId={user.id} title={user.name} email={user.email} />
+            <ListItem
+              userId={user.id}
+              title={user.name}
+              email={user.email}
+              img={true}
+            />
           </div>
         );
       })}
